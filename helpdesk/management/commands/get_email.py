@@ -363,6 +363,10 @@ def ticket_from_message(message, queue, logger, o365=False):
 
         # 'message' must be an RFC822 formatted message.
         subject = message.subject
+
+        if not subject:
+            subject = "Subject not provided"
+
         for affix in STRIPPED_SUBJECT_STRINGS:
             subject = subject.replace(affix, "")
         subject = subject.strip()
@@ -393,13 +397,15 @@ def ticket_from_message(message, queue, logger, o365=False):
 
         files = []
         body = message.get_body_text()
+
         files.append(
             SimpleUploadedFile(_("email_html_body.html"), message.body.encode(), 'text/html')
         )
 
         message.attachments.download_attachments()
         for attachment in message.attachments:
-            files.append(SimpleUploadedFile(attachment.name, base64.b64decode(attachment.content), attachment.attachment_type))
+            if attachment.content is not None:
+                files.append(SimpleUploadedFile(attachment.name, base64.b64decode(attachment.content), attachment.attachment_type))
         
         if ticket:
             try:
